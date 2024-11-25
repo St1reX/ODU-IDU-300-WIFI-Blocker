@@ -10,6 +10,7 @@ using System.Globalization;
 using System.Collections;
 using System.Net;
 using Csv;
+using OpenQA.Selenium.BiDi.Modules.Log;
 
 namespace WiFi_Blocker
 {
@@ -19,6 +20,7 @@ namespace WiFi_Blocker
         int Interval { get; set; }
         string Login { get; set; }
         string Password { get; set; }
+        string WhiteListPath { get; set; }
         List<string> WhiteList  = new List<string>();
 
 
@@ -28,59 +30,98 @@ namespace WiFi_Blocker
             Password = password;
             Interval = interval;
 
-            WhiteListManagment();
-            //BlockDevices(WhiteList);
+            //WhiteListManagment();
+            BlockDevices(WhiteList);
         }
 
         private void WhiteListManagment()
         {
-            char userAction = ' ';
+            ConsoleKey actionKey;
+            List<string> communicates = new List<string> {"", "(ENTER) - add new device (MAC adress) || (ESCAPE) - continue" };
+
 
             FetchWhiteList();
 
             if (WhiteList.Count == 0)
             {
-                Logger.InfoMessage("White list is currently empty. \nDo you want to continue. It will cause blocking every device connected to WI-FI");
+                communicates[0] = "White list is currently empty. \nDo you want to continue. It will cause blocking every device connected to WI - FI";
             }
             else
             {
+                communicates.RemoveAt(0);
+
+                Console.WriteLine("WHITE LIST");
+
                 foreach (string MAC in WhiteList)
                 {
                     Console.WriteLine($"MAC: {MAC}");
                 }
 
-                Console.WriteLine("Do you want to add new device (ENTER) or block deviced instantly (ESCAPE)");
+                Console.WriteLine("Press any key to continue...");
+                Console.ReadKey();
+            }
+
+            while (true)
+            {
+                if(WhiteList.Count != 0)
+                {
+                    communicates.RemoveAt(0);
+                }
+
+                DisplayCommunicates(communicates);
+
+                actionKey = Console.ReadKey().Key;
+
+                switch (actionKey)
+                {
+                    case ConsoleKey.Enter:
+                        AddDeviceToWhiteList();
+                        break;
+                    case ConsoleKey.Escape:
+                        Console.Clear();
+                        return;
+                    default:
+                        continue;
+                }
+
+                Console.Clear();
             }
         }
 
         private void FetchWhiteList()
         {
-            string whiteListPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "WhiteList"));
+            WhiteListPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "WhiteList"));
 
 
             try
             {
-                if (!Directory.Exists(whiteListPath))
+                if (!Directory.Exists(WhiteListPath))
                 {
-                    Directory.CreateDirectory(whiteListPath);
-                    whiteListPath = Path.Combine(whiteListPath, "devices.csv");
+                    Directory.CreateDirectory(WhiteListPath);
+                    WhiteListPath = Path.Combine(WhiteListPath, "devices.csv");
 
-                    using (File.Create(whiteListPath))
+                    using (File.Create(WhiteListPath))
                     {
                         
                     }
 
                     Logger.SuccessMessage("Directory WhiteList created");
                 }
-                else
+
+
+
+                if(!WhiteListPath.Contains("devices.csv"))
                 {
-                    var csvFile = File.ReadAllText(whiteListPath);
-                    foreach (var line in CsvReader.ReadFromText(csvFile))
-                    {
-                        WhiteList.Add(line[0]);
-                        Console.WriteLine(line[0]);
-                    }             
+                    WhiteListPath = Path.Combine(WhiteListPath, "devices.csv");
                 }
+
+                var csvFile = File.ReadAllText(WhiteListPath);
+                    
+                foreach (var line in CsvReader.ReadFromText(csvFile))
+                {
+                    WhiteList.Add(line[0]);
+                    Console.WriteLine(line[0]);
+                }             
             }
             catch (Exception ex)
             {
@@ -88,9 +129,41 @@ namespace WiFi_Blocker
             }
         }
 
-        private void AddToWhiteList(string deviceMac)
+        private void AddDeviceToWhiteList()
         {
+            string MAC = "";
 
+            Console.WriteLine("Provide device MAC Adress");
+            MAC = Console.ReadLine();
+
+            if(WhiteList.Contains(MAC))
+            {
+                Logger.InfoMessage("Provided MAC adress is already added to the WhiteList. Press any key to continue...");
+                Console.ReadKey();
+            }
+            else
+            {
+                WhiteList.Add(MAC);
+                Logger.SuccessMessage("Added device successfully. Press any key to continue...");
+                Console.ReadKey();
+            }
+        }
+
+        private void SaveWhiteListToFile()
+        {
+            try
+            {
+                using (TextWriter w1 = new StreamWriter(WhiteListPath)) 
+                {
+                    
+                }
+
+                
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
 
         private void BlockDevices(List <string> whiteList)
@@ -125,7 +198,26 @@ namespace WiFi_Blocker
             DOMElement = ChromeInstance.FindElement(By.Id("menu13"));
             DOMElement.Click();
 
+            ChromeInstance.SwitchTo().DefaultContent();
 
+
+
+            IFrame = ChromeInstance.FindElement(By.Id("webbody"));
+            ChromeInstance.SwitchTo().Frame(IFrame);
+
+            IFrame = ChromeInstance.FindElement(By.Id("bodysetting_content"));
+            ChromeInstance.SwitchTo().Frame(IFrame);
+            Logger.InfoMessage("Context switched to Device List IFrame");
+
+
+            IWebElement devicesTable = ChromeInstance.FindElement(By.Id("div_info_normal"));
+            IEnumerable<IWebElement> devicesList = devicesTable.FindElements(By.TagName("tr"));
+
+            foreach (var device in devicesList)
+            {
+                string Mac = device.FindElements(By.TagName("td"))[3].Text;
+                Console.WriteLine(Mac);
+            }
         }
 
         private void LoginUser()
@@ -182,6 +274,14 @@ namespace WiFi_Blocker
             {
                 Console.WriteLine("Failed to initialize ChromeDriver: " + ex.Message);
                 throw;
+            }
+        }
+
+        private void DisplayCommunicates(List<string> communicates)
+        {
+            foreach (string c in communicates)
+            {
+                Logger.InfoMessage(c);
             }
         }
 

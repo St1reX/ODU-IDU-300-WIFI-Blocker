@@ -7,12 +7,12 @@
       "RelativeMoniker": "D:0:0:{736FD793-8C4B-4C57-90D8-1DB929C90D0A}|WiFi-Blocker\\WiFi-Blocker.csproj|solutionrelative:wifi-blocker\\blocker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{736FD793-8C4B-4C57-90D8-1DB929C90D0A}|WiFi-Blocker\\WiFi-Blocker.csproj|c:\\users\\uryga\\documents\\github\\odu-idu-300-wifi-blocker\\wifi-blocker\\wifi-blocker\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{736FD793-8C4B-4C57-90D8-1DB929C90D0A}|WiFi-Blocker\\WiFi-Blocker.csproj|solutionrelative:wifi-blocker\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{736FD793-8C4B-4C57-90D8-1DB929C90D0A}|WiFi-Blocker\\WiFi-Blocker.csproj|C:\\Users\\uryga\\Documents\\GitHub\\ODU-IDU-300-WIFI-Blocker\\WiFi-Blocker\\wifi-blocker\\logger.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{736FD793-8C4B-4C57-90D8-1DB929C90D0A}|WiFi-Blocker\\WiFi-Blocker.csproj|solutionrelative:wifi-blocker\\logger.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{736FD793-8C4B-4C57-90D8-1DB929C90D0A}|WiFi-Blocker\\WiFi-Blocker.csproj|c:\\users\\uryga\\documents\\github\\odu-idu-300-wifi-blocker\\wifi-blocker\\wifi-blocker\\logger.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{736FD793-8C4B-4C57-90D8-1DB929C90D0A}|WiFi-Blocker\\WiFi-Blocker.csproj|solutionrelative:wifi-blocker\\logger.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{736FD793-8C4B-4C57-90D8-1DB929C90D0A}|WiFi-Blocker\\WiFi-Blocker.csproj|C:\\Users\\uryga\\Documents\\GitHub\\ODU-IDU-300-WIFI-Blocker\\WiFi-Blocker\\wifi-blocker\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{736FD793-8C4B-4C57-90D8-1DB929C90D0A}|WiFi-Blocker\\WiFi-Blocker.csproj|solutionrelative:wifi-blocker\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -26,7 +26,7 @@
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "Program.cs",
               "DocumentMoniker": "C:\\Users\\uryga\\Documents\\GitHub\\ODU-IDU-300-WIFI-Blocker\\WiFi-Blocker\\WiFi-Blocker\\Program.cs",
               "RelativeDocumentMoniker": "WiFi-Blocker\\Program.cs",
@@ -45,14 +45,14 @@
               "RelativeDocumentMoniker": "WiFi-Blocker\\Blocker.cs",
               "ToolTip": "C:\\Users\\uryga\\Documents\\GitHub\\ODU-IDU-300-WIFI-Blocker\\WiFi-Blocker\\WiFi-Blocker\\Blocker.cs",
               "RelativeToolTip": "WiFi-Blocker\\Blocker.cs",
-              "ViewState": "AgIAACsAAAAAAAAAAAAIwEcAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAMIAAAAAAAAAAAAIwNsAAAANAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2024-11-18T18:11:00.909Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 1,
               "Title": "Logger.cs",
               "DocumentMoniker": "C:\\Users\\uryga\\Documents\\GitHub\\ODU-IDU-300-WIFI-Blocker\\WiFi-Blocker\\WiFi-Blocker\\Logger.cs",
               "RelativeDocumentMoniker": "WiFi-Blocker\\Logger.cs",
