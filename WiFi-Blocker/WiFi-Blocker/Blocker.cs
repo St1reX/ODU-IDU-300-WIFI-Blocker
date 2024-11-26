@@ -9,19 +9,25 @@ using System.Threading.Tasks;
 using System.Globalization;
 using System.Collections;
 using System.Net;
-using Csv;
+using CsvHelper;
 using OpenQA.Selenium.BiDi.Modules.Log;
+using CsvHelper.Configuration;
 
 namespace WiFi_Blocker
 {
     internal class Blocker
     {
+        struct MacRowCsv
+        {
+            int id;
+            string MAC;
+        }
         ChromeDriver ChromeInstance { get; set; }
         int Interval { get; set; }
         string Login { get; set; }
         string Password { get; set; }
         string WhiteListPath { get; set; }
-        List<string> WhiteList  = new List<string>();
+        List<MacRowCsv> WhiteList  = new List<MacRowCsv>();
 
 
         public Blocker(string login, string password, int interval)
@@ -30,21 +36,21 @@ namespace WiFi_Blocker
             Password = password;
             Interval = interval;
 
-            //WhiteListManagment();
-            BlockDevices(WhiteList);
+            WhiteListManagment();
+            //BlockDevices(WhiteList);
         }
 
         private void WhiteListManagment()
         {
             ConsoleKey actionKey;
-            List<string> communicates = new List<string> {"", "(ENTER) - add new device (MAC adress) || (ESCAPE) - continue" };
+            List<string> communicates = new List<string> {"", "(ENTER) - add new device (MAC adress) || (ESCAPE) - continue." };
 
 
             FetchWhiteList();
 
             if (WhiteList.Count == 0)
             {
-                communicates[0] = "White list is currently empty. \nDo you want to continue. It will cause blocking every device connected to WI - FI";
+                communicates[0] = "White list is currently empty. \nDo you want to continue. It will cause blocking every device connected to WI-FI.";
             }
             else
             {
@@ -108,20 +114,32 @@ namespace WiFi_Blocker
                     Logger.SuccessMessage("Directory WhiteList created");
                 }
 
+                WhiteListPath = Path.Combine(WhiteListPath, "devices.csv");
 
+                StreamReader reader;
+                CsvReader csvReader;
 
-                if(!WhiteListPath.Contains("devices.csv"))
+                using (reader = new StreamReader(WhiteListPath, new System.Text.UTF8Encoding(true)))
                 {
-                    WhiteListPath = Path.Combine(WhiteListPath, "devices.csv");
+                    using (csvReader = new CsvReader(reader, CultureInfo.InvariantCulture))
+                    {
+                        var records = csvReader.GetRecords<dynamic>();
+                        string MAC = "";
+
+                        foreach (var record in records)
+                        {
+                            foreach (var field in record)
+                            {
+                                if (field.Key == "Key")
+                                {
+                                    MAC = field.Value;
+                                }
+                            }
+                            WhiteList.Add(MAC); 
+                        }
+                    }
                 }
 
-                var csvFile = File.ReadAllText(WhiteListPath);
-                    
-                foreach (var line in CsvReader.ReadFromText(csvFile))
-                {
-                    WhiteList.Add(line[0]);
-                    Console.WriteLine(line[0]);
-                }             
             }
             catch (Exception ex)
             {
@@ -133,36 +151,43 @@ namespace WiFi_Blocker
         {
             string MAC = "";
 
-            Console.WriteLine("Provide device MAC Adress");
+            Console.WriteLine("Provide device MAC Adress: ");
             MAC = Console.ReadLine();
 
-            if(WhiteList.Contains(MAC))
-            {
-                Logger.InfoMessage("Provided MAC adress is already added to the WhiteList. Press any key to continue...");
-                Console.ReadKey();
-            }
-            else
-            {
-                WhiteList.Add(MAC);
-                Logger.SuccessMessage("Added device successfully. Press any key to continue...");
-                Console.ReadKey();
-            }
-        }
-
-        private void SaveWhiteListToFile()
-        {
             try
             {
-                using (TextWriter w1 = new StreamWriter(WhiteListPath)) 
+                if(WhiteList.Contains(MAC))
                 {
-                    
+                    Logger.InfoMessage("Provided MAC adress is already added to the WhiteList. Press any key to continue...");
+                    Console.ReadKey();
                 }
+                else
+                {
+                    WhiteList.Add(MAC);
 
-                
-            }
-            catch (Exception ex)
+                    StreamWriter writer;
+                    CsvWriter csvWriter;
+                    CsvConfiguration config = new CsvConfiguration(CultureInfo.InvariantCulture)
+                    {
+                        HasHeaderRecord = false,
+                    };
+
+                    using (writer = new StreamWriter(WhiteListPath, true, new System.Text.UTF8Encoding(true)))
+                    {
+                        using (csvWriter = new CsvWriter(writer, config))
+                        {
+                            csvWriter.WriteRecord(MAC);
+                            csvWriter.NextRecord();
+                        }
+                    }
+
+                    Logger.SuccessMessage("Added device successfully. Press any key to continue...");
+                    Console.ReadKey();
+                }
+            }catch(Exception ex)
             {
                 Console.WriteLine(ex.Message);
+                Console.ReadKey();
             }
         }
 
@@ -215,8 +240,8 @@ namespace WiFi_Blocker
 
             foreach (var device in devicesList)
             {
-                string Mac = device.FindElements(By.TagName("td"))[3].Text;
-                Console.WriteLine(Mac);
+                string MAC = device.FindElements(By.TagName("td"))[3].Text;
+                Console.WriteLine(MAC);
             }
         }
 
