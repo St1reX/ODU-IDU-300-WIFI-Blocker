@@ -9,25 +9,19 @@ using System.Threading.Tasks;
 using System.Globalization;
 using System.Collections;
 using System.Net;
-using CsvHelper;
 using OpenQA.Selenium.BiDi.Modules.Log;
-using CsvHelper.Configuration;
+using System.Net.Http.Headers;
 
 namespace WiFi_Blocker
 {
     internal class Blocker
     {
-        struct MacRowCsv
-        {
-            int id;
-            string MAC;
-        }
         ChromeDriver ChromeInstance { get; set; }
         int Interval { get; set; }
         string Login { get; set; }
         string Password { get; set; }
         string WhiteListPath { get; set; }
-        List<MacRowCsv> WhiteList  = new List<MacRowCsv>();
+        List<string> WhiteList  = new List<string>();
 
 
         public Blocker(string login, string password, int interval)
@@ -81,7 +75,7 @@ namespace WiFi_Blocker
                 switch (actionKey)
                 {
                     case ConsoleKey.Enter:
-                        AddDeviceToWhiteList();
+                        //AddDeviceToWhiteList();
                         break;
                     case ConsoleKey.Escape:
                         Console.Clear();
@@ -98,13 +92,12 @@ namespace WiFi_Blocker
         {
             WhiteListPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "WhiteList"));
 
-
             try
             {
                 if (!Directory.Exists(WhiteListPath))
                 {
                     Directory.CreateDirectory(WhiteListPath);
-                    WhiteListPath = Path.Combine(WhiteListPath, "devices.csv");
+                    WhiteListPath = Path.Combine(WhiteListPath, "devices.txt");
 
                     using (File.Create(WhiteListPath))
                     {
@@ -113,31 +106,36 @@ namespace WiFi_Blocker
 
                     Logger.SuccessMessage("Directory WhiteList created");
                 }
-
-                WhiteListPath = Path.Combine(WhiteListPath, "devices.csv");
+                else
+                {
+                    WhiteListPath = Path.Combine(WhiteListPath, "devices.txt");
+                }
 
                 StreamReader reader;
-                CsvReader csvReader;
 
                 using (reader = new StreamReader(WhiteListPath, new System.Text.UTF8Encoding(true)))
                 {
-                    using (csvReader = new CsvReader(reader, CultureInfo.InvariantCulture))
-                    {
-                        var records = csvReader.GetRecords<dynamic>();
-                        string MAC = "";
+                    string deviceMAC = "";
+                    char character = ' ';
 
-                        foreach (var record in records)
+                    while (reader.Peek() != -1)
+                    {
+                        character = (char)reader.Read();
+
+                        if(character == ';')
                         {
-                            foreach (var field in record)
-                            {
-                                if (field.Key == "Key")
-                                {
-                                    MAC = field.Value;
-                                }
-                            }
-                            WhiteList.Add(MAC); 
+                            WhiteList.Add(deviceMAC);
+                            continue;
                         }
+
+                        deviceMAC += character;
                     }
+
+                    foreach(var element in WhiteList)
+                    {
+                        Console.WriteLine(element);
+                    }
+                    Console.ReadKey();
                 }
 
             }
@@ -147,49 +145,49 @@ namespace WiFi_Blocker
             }
         }
 
-        private void AddDeviceToWhiteList()
-        {
-            string MAC = "";
+        //private void AddDeviceToWhiteList()
+        //{
+        //    string MAC = "";
 
-            Console.WriteLine("Provide device MAC Adress: ");
-            MAC = Console.ReadLine();
+        //    Console.WriteLine("Provide device MAC Adress: ");
+        //    MAC = Console.ReadLine();
 
-            try
-            {
-                if(WhiteList.Contains(MAC))
-                {
-                    Logger.InfoMessage("Provided MAC adress is already added to the WhiteList. Press any key to continue...");
-                    Console.ReadKey();
-                }
-                else
-                {
-                    WhiteList.Add(MAC);
+        //    try
+        //    {
+        //        if(WhiteList.Contains(MAC))
+        //        {
+        //            Logger.InfoMessage("Provided MAC adress is already added to the WhiteList. Press any key to continue...");
+        //            Console.ReadKey();
+        //        }
+        //        else
+        //        {
+        //            WhiteList.Add(MAC);
 
-                    StreamWriter writer;
-                    CsvWriter csvWriter;
-                    CsvConfiguration config = new CsvConfiguration(CultureInfo.InvariantCulture)
-                    {
-                        HasHeaderRecord = false,
-                    };
+        //            StreamWriter writer;
+        //            CsvWriter csvWriter;
+        //            CsvConfiguration config = new CsvConfiguration(CultureInfo.InvariantCulture)
+        //            {
+        //                HasHeaderRecord = false,
+        //            };
 
-                    using (writer = new StreamWriter(WhiteListPath, true, new System.Text.UTF8Encoding(true)))
-                    {
-                        using (csvWriter = new CsvWriter(writer, config))
-                        {
-                            csvWriter.WriteRecord(MAC);
-                            csvWriter.NextRecord();
-                        }
-                    }
+        //            using (writer = new StreamWriter(WhiteListPath, true, new System.Text.UTF8Encoding(true)))
+        //            {
+        //                using (csvWriter = new CsvWriter(writer, config))
+        //                {
+        //                    csvWriter.WriteRecord(MAC);
+        //                    csvWriter.NextRecord();
+        //                }
+        //            }
 
-                    Logger.SuccessMessage("Added device successfully. Press any key to continue...");
-                    Console.ReadKey();
-                }
-            }catch(Exception ex)
-            {
-                Console.WriteLine(ex.Message);
-                Console.ReadKey();
-            }
-        }
+        //            Logger.SuccessMessage("Added device successfully. Press any key to continue...");
+        //            Console.ReadKey();
+        //        }
+        //    }catch(Exception ex)
+        //    {
+        //        Console.WriteLine(ex.Message);
+        //        Console.ReadKey();
+        //    }
+        //}
 
         private void BlockDevices(List <string> whiteList)
         {
