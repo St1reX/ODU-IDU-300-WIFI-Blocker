@@ -31,7 +31,7 @@ namespace WiFi_Blocker
             Interval = interval;
 
             WhiteListManagment();
-            //BlockDevices(WhiteList);
+            BlockDevices(WhiteList);
         }
 
         private void WhiteListManagment()
@@ -39,52 +39,58 @@ namespace WiFi_Blocker
             ConsoleKey actionKey;
             List<string> communicates = new List<string> {"", "(ENTER) - add new device (MAC adress) || (ESCAPE) - continue." };
 
-
-            FetchWhiteList();
-
-            if (WhiteList.Count == 0)
+            try
             {
-                communicates[0] = "White list is currently empty. \nDo you want to continue. It will cause blocking every device connected to WI-FI.";
-            }
-            else
-            {
-                communicates.RemoveAt(0);
+                FetchWhiteList();
 
-                Console.WriteLine("WHITE LIST");
-
-                foreach (string MAC in WhiteList)
+                if (WhiteList.Count == 0)
                 {
-                    Console.WriteLine($"MAC: {MAC}");
+                    communicates[0] = "White list is currently empty. \nDo you want to continue. It will cause blocking every device connected to WI-FI.";
                 }
-
-                Console.WriteLine("Press any key to continue...");
-                Console.ReadKey();
-            }
-
-            while (true)
-            {
-                if(WhiteList.Count != 0)
+                else
                 {
                     communicates.RemoveAt(0);
+
+                    Console.WriteLine("WHITE LIST");
+
+                    foreach (string MAC in WhiteList)
+                    {
+                        Console.WriteLine($"MAC: {MAC}");
+                    }
+
+                    Console.WriteLine("Press any key to continue...");
+                    Console.ReadKey();
                 }
 
-                DisplayCommunicates(communicates);
-
-                actionKey = Console.ReadKey().Key;
-
-                switch (actionKey)
+                while (true)
                 {
-                    case ConsoleKey.Enter:
-                        //AddDeviceToWhiteList();
-                        break;
-                    case ConsoleKey.Escape:
-                        Console.Clear();
-                        return;
-                    default:
-                        continue;
-                }
+                    if (WhiteList.Count != 0 && communicates.Count > 1)
+                    {
+                        communicates.RemoveAt(0);
+                    }
 
-                Console.Clear();
+                    DisplayCommunicates(communicates);
+
+                    actionKey = Console.ReadKey().Key;
+
+                    switch (actionKey)
+                    {
+                        case ConsoleKey.Enter:
+                            AddDeviceToWhiteList();
+                            break;
+                        case ConsoleKey.Escape:
+                            return;
+                        default:
+                            continue;
+                    }
+
+                    Console.Clear();
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.ErrorMessage("Unknown error ocurred while managin WhiteList: " + ex.Message);
+                Environment.Exit(0);
             }
         }
 
@@ -125,121 +131,131 @@ namespace WiFi_Blocker
                         if(character == ';')
                         {
                             WhiteList.Add(deviceMAC);
+                            deviceMAC = "";
                             continue;
                         }
 
                         deviceMAC += character;
                     }
-
-                    foreach(var element in WhiteList)
-                    {
-                        Console.WriteLine(element);
-                    }
-                    Console.ReadKey();
                 }
 
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                Logger.ErrorMessage(ex.Message);
+                Environment.Exit(0);
             }
         }
 
-        //private void AddDeviceToWhiteList()
-        //{
-        //    string MAC = "";
+        private void AddDeviceToWhiteList()
+        {
+            string MAC = "";
 
-        //    Console.WriteLine("Provide device MAC Adress: ");
-        //    MAC = Console.ReadLine();
+            Console.WriteLine("Provide device MAC Adress: ");
+            MAC = Console.ReadLine();
 
-        //    try
-        //    {
-        //        if(WhiteList.Contains(MAC))
-        //        {
-        //            Logger.InfoMessage("Provided MAC adress is already added to the WhiteList. Press any key to continue...");
-        //            Console.ReadKey();
-        //        }
-        //        else
-        //        {
-        //            WhiteList.Add(MAC);
+            try
+            {
+                if (WhiteList.Contains(MAC))
+                {
+                    Logger.InfoMessage("Provided MAC adress is already added to the WhiteList. Press any key to continue...");
+                    Console.ReadKey();
+                }
+                else
+                {
+                    WhiteList.Add(MAC);
 
-        //            StreamWriter writer;
-        //            CsvWriter csvWriter;
-        //            CsvConfiguration config = new CsvConfiguration(CultureInfo.InvariantCulture)
-        //            {
-        //                HasHeaderRecord = false,
-        //            };
+                    StreamWriter writer;
+  
+                    using (writer = File.AppendText(WhiteListPath))
+                    {
+                        foreach(var letter in MAC)
+                        {
+                            writer.Write(letter);
+                        }
+                        writer.Write(";");
+                    }
 
-        //            using (writer = new StreamWriter(WhiteListPath, true, new System.Text.UTF8Encoding(true)))
-        //            {
-        //                using (csvWriter = new CsvWriter(writer, config))
-        //                {
-        //                    csvWriter.WriteRecord(MAC);
-        //                    csvWriter.NextRecord();
-        //                }
-        //            }
-
-        //            Logger.SuccessMessage("Added device successfully. Press any key to continue...");
-        //            Console.ReadKey();
-        //        }
-        //    }catch(Exception ex)
-        //    {
-        //        Console.WriteLine(ex.Message);
-        //        Console.ReadKey();
-        //    }
-        //}
+                    Logger.SuccessMessage("Added device successfully. Press any key to continue...");
+                    Console.ReadKey();
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.ErrorMessage(ex.Message);
+                Environment.Exit(0);
+            }
+        }
 
         private void BlockDevices(List <string> whiteList)
         {
-            LoginUser();
-
-            IWebElement DOMElement;
-            IWebElement IFrame;
-
-            IFrame = ChromeInstance.FindElement(By.Id("header"));
-            ChromeInstance.SwitchTo().Frame(IFrame);
-            Logger.InfoMessage("Context switched to header IFrame");
-
-            DOMElement = ChromeInstance.FindElement(By.Id("menu3"));
-            DOMElement.Click();
-
-            ChromeInstance.SwitchTo().DefaultContent();
-
-
-
-            IFrame = ChromeInstance.FindElement(By.Id("webbody"));
-            ChromeInstance.SwitchTo().Frame(IFrame);
-            Logger.InfoMessage("Context switched to body IFrame");
-
-            IFrame = ChromeInstance.FindElement(By.Id("bodysetting_menu"));
-            ChromeInstance.SwitchTo().Frame(IFrame);
-            Logger.InfoMessage("Context switched to SideNav IFrame");
-
-            DOMElement = ChromeInstance.FindElement(By.Id("menu12"));
-            DOMElement.Click();
-
-            DOMElement = ChromeInstance.FindElement(By.Id("menu13"));
-            DOMElement.Click();
-
-            ChromeInstance.SwitchTo().DefaultContent();
-
-
-
-            IFrame = ChromeInstance.FindElement(By.Id("webbody"));
-            ChromeInstance.SwitchTo().Frame(IFrame);
-
-            IFrame = ChromeInstance.FindElement(By.Id("bodysetting_content"));
-            ChromeInstance.SwitchTo().Frame(IFrame);
-            Logger.InfoMessage("Context switched to Device List IFrame");
-
-
-            IWebElement devicesTable = ChromeInstance.FindElement(By.Id("div_info_normal"));
-            IEnumerable<IWebElement> devicesList = devicesTable.FindElements(By.TagName("tr"));
-
-            foreach (var device in devicesList)
+            try
             {
-                string MAC = device.FindElements(By.TagName("td"))[3].Text;
-                Console.WriteLine(MAC);
+                LoginUser();
+
+                IWebElement DOMElement;
+                IWebElement IFrame;
+
+                IFrame = ChromeInstance.FindElement(By.Id("header"));
+                ChromeInstance.SwitchTo().Frame(IFrame);
+                Logger.InfoMessage("Context switched to header IFrame");
+
+                DOMElement = ChromeInstance.FindElement(By.Id("menu3"));
+                DOMElement.Click();
+
+                ChromeInstance.SwitchTo().DefaultContent();
+
+
+
+                IFrame = ChromeInstance.FindElement(By.Id("webbody"));
+                ChromeInstance.SwitchTo().Frame(IFrame);
+                Logger.InfoMessage("Context switched to body IFrame");
+
+                IFrame = ChromeInstance.FindElement(By.Id("bodysetting_menu"));
+                ChromeInstance.SwitchTo().Frame(IFrame);
+                Logger.InfoMessage("Context switched to SideNav IFrame");
+
+                DOMElement = ChromeInstance.FindElement(By.Id("menu12"));
+                DOMElement.Click();
+
+                DOMElement = ChromeInstance.FindElement(By.Id("menu13"));
+                DOMElement.Click();
+
+                ChromeInstance.SwitchTo().DefaultContent();
+
+
+
+                IFrame = ChromeInstance.FindElement(By.Id("webbody"));
+                ChromeInstance.SwitchTo().Frame(IFrame);
+
+                IFrame = ChromeInstance.FindElement(By.Id("bodysetting_content"));
+                ChromeInstance.SwitchTo().Frame(IFrame);
+                Logger.InfoMessage("Context switched to Device List IFrame");
+
+
+                DOMElement = ChromeInstance.FindElement(By.Id("div_info_normal"));
+                IEnumerable<IWebElement> devicesList = DOMElement.FindElements(By.TagName("tr"));
+
+                foreach (var device in devicesList)
+                {
+                    string MAC = device.FindElements(By.TagName("td"))[3].Text;
+                    IWebElement checkBox = device.FindElements(By.TagName("td"))[7];
+
+                    if (whiteList.Contains(MAC))
+                    {
+                        continue;
+                    }
+                    checkBox.Click();
+                }
+
+                DOMElement = ChromeInstance.FindElements(By.TagName("table"))[1];
+                DOMElement = DOMElement.FindElements(By.TagName("td"))[2];
+                DOMElement.Click();
+            }
+            catch (Exception ex)
+            {
+                Logger.ErrorMessage("Unknown error ocurred while blocking the devices on router admin panel: " + ex.Message);
+                Environment.Exit(0);
             }
         }
 
@@ -276,7 +292,8 @@ namespace WiFi_Blocker
             }
             catch (Exception ex)
             {
-                Logger.ErrorMessage(ex.Message);
+                Logger.ErrorMessage("Error occured while loggin the user to the admin panel: " + ex.Message);
+                Environment.Exit(0);
             }
 
         }
@@ -295,8 +312,8 @@ namespace WiFi_Blocker
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Failed to initialize ChromeDriver: " + ex.Message);
-                throw;
+                Logger.ErrorMessage("Failed to initialize ChromeDriver: " + ex.Message);
+                Environment.Exit(0);
             }
         }
 
