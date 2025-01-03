@@ -31,13 +31,16 @@ namespace WiFi_Blocker
             Interval = interval;
 
             WhiteListManagment();
-            BlockDevices(WhiteList);
+            //BlockDevices(WhiteList);
         }
 
+
+        //WHITE LIST MANAGMENT
         private void WhiteListManagment()
-        {
-            ConsoleKey actionKey;
-            List<string> communicates = new List<string> {"", "(ENTER) - add new device (MAC adress) || (ESCAPE) - continue." };
+        { 
+            int selectedOption = 0;
+            List<string> communicates = new List<string> { };
+            List<string> options = new List<string> {"Add new MAC to WhiteList", "Delete MAC from WhiteList", "Display WhiteList"};
 
             try
             {
@@ -45,46 +48,31 @@ namespace WiFi_Blocker
 
                 if (WhiteList.Count == 0)
                 {
-                    communicates[0] = "White list is currently empty. \nDo you want to continue. It will cause blocking every device connected to WI-FI.";
-                }
-                else
-                {
-                    communicates.RemoveAt(0);
-
-                    Console.WriteLine("WHITE LIST");
-
-                    foreach (string MAC in WhiteList)
-                    {
-                        Console.WriteLine($"MAC: {MAC}");
-                    }
-
-                    Console.WriteLine("Press any key to continue...");
-                    Console.ReadKey();
+                    Logger.InfoMessage("White list is currently empty. \nDo you want to continue. It will cause blocking every device connected to WI-FI.");
                 }
 
-                while (true)
+                DisplayWhiteList();
+
+                Console.Clear();
+
+                while (selectedOption != -1)
                 {
-                    if (WhiteList.Count != 0 && communicates.Count > 1)
+                    selectedOption = SelectFromGivenOptions(options, communicates);
+
+                    switch (selectedOption)
                     {
-                        communicates.RemoveAt(0);
-                    }
-
-                    DisplayCommunicates(communicates);
-
-                    actionKey = Console.ReadKey().Key;
-
-                    switch (actionKey)
-                    {
-                        case ConsoleKey.Enter:
+                        case 0:
                             AddDeviceToWhiteList();
                             break;
-                        case ConsoleKey.Escape:
-                            return;
+                        case 1:
+                            DeleteDeviceFromWhiteList();
+                            break;
+                        case 2:
+                            DisplayWhiteList();
+                            break;
                         default:
-                            continue;
+                            break;
                     }
-
-                    Console.Clear();
                 }
             }
             catch (Exception ex)
@@ -93,7 +81,6 @@ namespace WiFi_Blocker
                 Environment.Exit(0);
             }
         }
-
         private void FetchWhiteList()
         {
             WhiteListPath = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "WhiteList"));
@@ -146,11 +133,11 @@ namespace WiFi_Blocker
                 Environment.Exit(0);
             }
         }
-
         private void AddDeviceToWhiteList()
         {
-            string MAC = "";
+            Console.Clear();
 
+            string MAC = "";
             Console.WriteLine("Provide device MAC Adress: ");
             MAC = Console.ReadLine();
 
@@ -166,10 +153,10 @@ namespace WiFi_Blocker
                     WhiteList.Add(MAC);
 
                     StreamWriter writer;
-  
+
                     using (writer = File.AppendText(WhiteListPath))
                     {
-                        foreach(var letter in MAC)
+                        foreach (var letter in MAC)
                         {
                             writer.Write(letter);
                         }
@@ -186,7 +173,74 @@ namespace WiFi_Blocker
                 Environment.Exit(0);
             }
         }
+        private void DeleteDeviceFromWhiteList()
+        {
+            Console.Clear();
 
+            int selectedOption = 0;
+            List<string> communicates = new List<string> {"Select device you want to delete."};
+            List<string> options = WhiteList;
+
+            try
+            {
+
+                while (selectedOption != -1)
+                {
+                   selectedOption = SelectFromGivenOptions(options, communicates);
+
+                    if (selectedOption != -1)
+                    {
+                        options.RemoveAt(selectedOption);
+
+                        StreamWriter writer;
+
+                        using (writer = File.CreateText(WhiteListPath))
+                        {
+                            foreach (var device in options)
+                            {
+                                foreach (var letter in device)
+                                {
+                                    writer.Write(letter);
+                                }
+                                writer.Write(";");
+                            }
+                        }
+
+                        Logger.SuccessMessage("Deleted device successfully. Press any key to continue...");
+                        Console.ReadKey();
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.ErrorMessage(ex.Message);
+                Environment.Exit(0);
+            }
+        }
+        private void DisplayWhiteList()
+        {
+            Console.WriteLine("\n******************************");
+
+            Console.WriteLine("WHITE LIST");
+
+            foreach (string MAC in WhiteList)
+            {
+                Console.WriteLine($"MAC: {MAC}");
+            }
+
+            Console.WriteLine("******************************\n");
+
+            Console.WriteLine("Press any key to continue...");
+            Console.ReadKey();
+        }
+
+
+
+        //BROWSER MANAGMENT
         private void BlockDevices(List <string> whiteList)
         {
             try
@@ -258,7 +312,6 @@ namespace WiFi_Blocker
                 Environment.Exit(0);
             }
         }
-
         private void LoginUser()
         {
             try
@@ -297,7 +350,6 @@ namespace WiFi_Blocker
             }
 
         }
-
         private void CreateChromeInstance(params string[] chromeStartOption)
         {
             try
@@ -317,6 +369,8 @@ namespace WiFi_Blocker
             }
         }
 
+
+        //HELPER METHODS
         private void DisplayCommunicates(List<string> communicates)
         {
             foreach (string c in communicates)
@@ -324,7 +378,62 @@ namespace WiFi_Blocker
                 Logger.InfoMessage(c);
             }
         }
+        private int SelectFromGivenOptions(List<string> options, List<string> comunicates)
+        {
+            int selectedOption = 0;
+            ConsoleKey actionKey;
 
+            var tmpCommunicates = comunicates.ToList();
+            tmpCommunicates.Add("Use {↑ and ↓} to change selected option, ENTER to choose.");
+            tmpCommunicates.Add("Press ESC to exit.");
+            tmpCommunicates.Add("\n");
+
+            while (true)
+            {
+                Console.Clear();
+
+                foreach (var communicate in tmpCommunicates)
+                {
+                    Console.WriteLine(communicate);
+                }
+
+
+                for (int i = 0; i < options.Count; i++)
+                {
+                    if (i == selectedOption)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Green;
+
+                        Console.WriteLine(" > " + options[i]);
+
+                        Console.ResetColor();
+                        continue;
+                    }
+
+                    Console.WriteLine(options[i]);
+                }
+
+                actionKey = Console.ReadKey().Key;
+
+                switch (actionKey)
+                {
+                    case ConsoleKey.DownArrow:
+                        selectedOption = selectedOption + 1 >= options.Count ? 0 : selectedOption + 1;
+                        continue;
+                    case ConsoleKey.UpArrow:
+                        selectedOption = selectedOption - 1 < 0 ? options.Count - 1 : selectedOption - 1;
+                        continue;
+                    case ConsoleKey.Enter:
+                        tmpCommunicates.Clear();
+                        return selectedOption;
+                    case ConsoleKey.Escape:
+                        tmpCommunicates.Clear();
+                        return -1;
+                    default:
+                        continue;
+                }
+            }
+        }
         void Wait(int seconds)
         {
             System.Threading.Thread.Sleep(seconds);

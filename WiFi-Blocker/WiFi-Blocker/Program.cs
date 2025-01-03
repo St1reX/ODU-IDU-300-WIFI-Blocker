@@ -10,8 +10,9 @@ namespace WiFi_Blocker
     {
         static void Main(string[] args)
         {
-            Logger.InfoMessage("ODU IDU 300 from PLUS (Polkomtel sp. z o.o.) WI-FI devices blocker.");
+            Console.OutputEncoding = System.Text.Encoding.UTF8;
 
+            Logger.InfoMessage("ODU IDU 300 from PLUS (Polkomtel sp. z o.o.) WI-FI devices blocker.");
             Blocker blocker1 = new Blocker("admin", "Kuba2007", 2000);
         }
     }
